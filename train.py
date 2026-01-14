@@ -206,7 +206,7 @@ def train(batch_size):
     visualize_log(log_file, output_path, title=f'Training Log Visualization (Batch Size: {batch_size})')
 
 def main():
-    batch_sizes = [8, 16, 32]
+    batch_sizes = [2, 4, 6, 8, 16, 32]
 
     for bs in batch_sizes:
         print(f'Training with batch size: {bs}')
