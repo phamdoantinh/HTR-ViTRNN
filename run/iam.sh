@@ -1,6 +1,8 @@
+
 python3 train.py --exp-name iam \
 --max-lr 1e-3 \
---train-bs 128 \
+--num_layers_RNN 2 \
+--hidden_dim_RNN 256 \
 --val-bs 8 \
 --weight-decay 0.5 \
 --mask-ratio 0.4 \
@@ -17,7 +19,8 @@ IAM
 
 python3 test.py --exp-name iam \
 --max-lr 1e-3 \
---train-bs 128 \
+--num_layers_RNN 2 \
+--hidden_dim_RNN 256 \
 --val-bs 8 \
 --weight-decay 0.5 \
 --mask-ratio 0.4 \

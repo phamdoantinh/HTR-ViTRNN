@@ -1,4 +1,5 @@
 import os
+import gc
 import re
 import json
 import torch
@@ -200,17 +201,19 @@ def train(batch_size):
                 writer.add_scalar('./VAL/bestWER', best_wer, nb_iter)
                 writer.add_scalar('./VAL/val_loss', val_loss, nb_iter)
                 model.train()
-
     log_file = os.path.join('./output', args.exp_name, 'run.log')
     output_path = os.path.join('./output', args.exp_name, f'log_visualization_bs{batch_size}.png')
     visualize_log(log_file, output_path, title=f'Training Log Visualization (Batch Size: {batch_size})')
 
+
 def main():
-    batch_sizes = [2, 4, 6, 8, 16, 32]
+    batch_sizes = [4, 6, 8, 16, 32]
 
     for bs in batch_sizes:
         print(f'Training with batch size: {bs}')
         train(bs)
+        torch.cuda.empty_cache()
+        gc.collect()
 
 if __name__ == '__main__':
     main()

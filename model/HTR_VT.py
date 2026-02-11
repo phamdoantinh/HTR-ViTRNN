@@ -153,8 +153,7 @@ class MaskedAutoencoderViT(nn.Module):
                  hidden_dim_RNN=256,):
         super().__init__()
 
-        # --------------------------------------------------------------------------
-        # MAE encoder specifics
+       
         self.layer_norm = LayerNorm()
         self.patch_embed = resnet18.ResNet18(embed_dim)
         self.grid_size = [img_size[0] // patch_size[0], img_size[1] // patch_size[1]]
@@ -170,7 +169,6 @@ class MaskedAutoencoderViT(nn.Module):
 
         self.norm = norm_layer(embed_dim, elementwise_affine=True)
         self.head = torch.nn.Linear(embed_dim, nb_cls)
-        # --------------------------------------------------------------------------
 
         self.rnn = nn.LSTM(
             input_size=embed_dim,
@@ -248,7 +246,13 @@ class MaskedAutoencoderViT(nn.Module):
             x = blk(x)
 
         x = self.norm(x)
-        # To CTC Loss
+
+
+        # using RNN 
+        x, _ = self.rnn(x)
+        x = self.rnn_proj(x)
+
+        # CTC logits 
         x = self.head(x)
         x = self.layer_norm(x)
 
