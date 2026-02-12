@@ -1,5 +1,6 @@
-import torch
 
+import torch
+import gc
 import os
 import re
 import json
@@ -11,17 +12,24 @@ from model import HTR_VT
 from collections import OrderedDict
 
 
-def main():
+def test(batchsize, name):
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(args.seed)
 
-    args.save_dir = os.path.join(args.out_dir, args.exp_name)
+
+    args.train_bs = batchsize
+    names = f'{name}_bs{args.train_bs}'
+
+
+    args.save_dir = os.path.join(args.out_dir, names)
     os.makedirs(args.save_dir, exist_ok=True)
     logger = utils.get_logger(args.save_dir)
     logger.info(json.dumps(vars(args), indent=4, sort_keys=True))
 
-    model = HTR_VT.create_model(nb_cls=args.nb_cls, img_size=args.img_size[::-1])
+    model = HTR_VT.create_model(nb_cls=args.nb_cls, img_size=args.img_size[::-1],
+                                num_layer_RNN=args.num_layers_RNN,
+                                hidden_dim_RNN=args.hidden_dim_RNN)
 
     pth_path = args.save_dir + '/best_CER.pth'
     logger.info('loading HWR checkpoint from {}'.format(pth_path))
@@ -62,8 +70,14 @@ def main():
     logger.info(
         f'Test. loss : {val_loss:0.3f} \t CER : {val_cer:0.4f} \t WER : {val_wer:0.4f} ')
 
+def main():
+    batch_sizes = [4, 6, 8, 16, 32]
+
+    for bs in batch_sizes:
+        print(f'Training with batch size: {bs}')
+        test(bs,args.exp_name)
+        torch.cuda.empty_cache()
 
 if __name__ == '__main__':
     args = option.get_args_parser()
     main()
-
