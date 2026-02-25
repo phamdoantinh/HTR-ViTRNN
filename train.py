@@ -16,6 +16,7 @@ from utils import sam
 from utils import option
 from data import dataset
 from model import HTR_VT
+from model import HTR_ViTRNN
 
 def parse_log(log_file):
     iters, train_loss = [], []
@@ -98,7 +99,7 @@ def train(batch_size):
     logger.info(json.dumps(vars(args), indent=4, sort_keys=True))
     writer = SummaryWriter(args.save_dir)
 
-    model = HTR_VT.create_model(nb_cls=args.nb_cls, img_size=args.img_size[::-1],
+    model = HTR_ViTRNN.create_model(nb_cls=args.nb_cls, img_size=args.img_size[::-1],
                                 num_layer_RNN=args.num_layers_RNN,
                                 hidden_dim_RNN=args.hidden_dim_RNN)
 

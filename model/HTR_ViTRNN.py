@@ -148,11 +148,12 @@ class MaskedAutoencoderViT(nn.Module):
                  depth=24,
                  num_heads=16,
                  mlp_ratio=4.,
-                 norm_layer=nn.LayerNorm):
+                 norm_layer=nn.LayerNorm,
+                 num_layer_RNN=2,
+                 hidden_dim_RNN=256,):
         super().__init__()
 
-        # --------------------------------------------------------------------------
-        # MAE encoder specifics
+       
         self.layer_norm = LayerNorm()
         self.patch_embed = resnet18.ResNet18(embed_dim)
         self.grid_size = [img_size[0] // patch_size[0], img_size[1] // patch_size[1]]
@@ -168,6 +169,17 @@ class MaskedAutoencoderViT(nn.Module):
 
         self.norm = norm_layer(embed_dim, elementwise_affine=True)
         self.head = torch.nn.Linear(embed_dim, nb_cls)
+
+        self.rnn = nn.LSTM(
+            input_size=embed_dim,
+            hidden_size=hidden_dim_RNN,
+            num_layers=num_layer_RNN,
+            # dropout = 0.2,
+            batch_first=True,
+            bidirectional=True
+        )
+        self.rnn_proj = nn.Linear(512, embed_dim)
+        self.rnn_drop = nn.Dropout(0.2)
 
         self.initialize_weights()
 
@@ -234,14 +246,20 @@ class MaskedAutoencoderViT(nn.Module):
             x = blk(x)
 
         x = self.norm(x)
-        # To CTC Loss
+
+
+        # using RNN 
+        x, _ = self.rnn(x)
+        x = self.rnn_proj(x)
+
+        # CTC logits 
         x = self.head(x)
         x = self.layer_norm(x)
 
         return x
 
 
-def create_model(nb_cls, img_size, **kwargs):
+def create_model(nb_cls, img_size, num_layer_RNN=2, hidden_dim_RNN=256, **kwargs):
     model = MaskedAutoencoderViT(nb_cls,
                                  img_size=img_size,
                                  patch_size=(4, 64),
@@ -250,5 +268,8 @@ def create_model(nb_cls, img_size, **kwargs):
                                  num_heads=6,
                                  mlp_ratio=4,
                                  norm_layer=partial(nn.LayerNorm, eps=1e-6),
+                                 num_layer_RNN=num_layer_RNN,
+                                 hidden_dim_RNN=hidden_dim_RNN,
                                  **kwargs)
     return model
+
